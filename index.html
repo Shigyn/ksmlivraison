@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Camion KSM — Burgers livrés chez vous, suivi en direct</title>
+<meta name="description" content="Le camion KSM Burger livre à Fleurie et les communes proches. Commandez en ligne, suivez le camion en direct sur la carte, payez à la livraison (CB ou espèces).">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://ksm-camion.fr/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Le Camion KSM — Burgers livrés chez vous">
+<meta property="og:description" content="Commandez, suivez le camion en direct, on vous livre. Paiement à la livraison.">
+<meta property="og:image" content="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1200&q=80">
+<meta property="og:url" content="https://ksm-camion.fr/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;0,900;1,700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root{
+    --j:#F5C518; --j2:#FFD84D; --n:#111111; --n2:#1c1c1c; --n3:#272727; --b:#ffffff;
+    --t1:rgba(255,255,255,.92); --t2:rgba(255,255,255,.72); --t3:rgba(255,255,255,.48);
+    --r:#e63030; --ok:#38c172; --bord:rgba(245,197,24,.22);
+    --ft:'Barlow Condensed',sans-serif; --fc:'Barlow',sans-serif; --rad:12px; --radl:20px;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--n);color:var(--b);font-family:var(--fc);overflow-x:hidden;}
+
+  nav{position:fixed;top:0;left:0;right:0;z-index:500;height:64px;padding:0 5%;display:flex;justify-content:space-between;align-items:center;background:rgba(17,17,17,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--bord);}
+  .nlogo{font-family:var(--ft);font-size:1.5rem;font-weight:900;text-transform:uppercase;text-decoration:none;color:var(--b);letter-spacing:.05em;}
+  .nlogo span{color:var(--j);}
+  .nlive{display:flex;align-items:center;gap:8px;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t2);}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--t3);}
+  .dot.on{background:var(--ok);box-shadow:0 0 0 0 rgba(56,193,114,.6);animation:pulse 1.8s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(56,193,114,.5);}70%{box-shadow:0 0 0 8px rgba(56,193,114,0);}100%{box-shadow:0 0 0 0 rgba(56,193,114,0);}}
+
+  #hero{position:relative;min-height:78svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:130px 5% 60px;overflow:hidden;}
+  .hbg-img{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1400&q=80') center/cover no-repeat;filter:brightness(.28) saturate(.9);z-index:-2;}
+  .hov{position:absolute;inset:0;background:linear-gradient(180deg,rgba(17,17,17,.1) 0%,rgba(17,17,17,.5) 65%,var(--n) 100%);z-index:-1;}
+  .htitle{font-family:var(--ft);font-size:clamp(3rem,10vw,7rem);font-weight:900;text-transform:uppercase;line-height:.92;letter-spacing:-.02em;margin-bottom:18px;}
+  .htitle .acc{color:var(--j);}
+  .hsub{font-size:clamp(1rem,2.3vw,1.15rem);color:var(--t2);max-width:520px;margin:0 auto 32px;line-height:1.7;}
+  .bty{font-family:var(--fc);font-size:.88rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--j);color:var(--n);padding:15px 30px;border-radius:8px;text-decoration:none;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px;min-height:52px;}
+  .bty:hover{background:var(--j2);transform:translateY(-2px);}
+
+  section{padding:70px 5%;max-width:1100px;margin:0 auto;}
+  .stag{font-family:var(--fc);font-size:.65rem;font-weight:700;letter-spacing:.26em;text-transform:uppercase;color:var(--j);display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .stag::before{content:'';width:18px;height:2px;background:var(--j);}
+  .stitle{font-family:var(--ft);font-size:clamp(2rem,4.5vw,3rem);font-weight:900;text-transform:uppercase;line-height:1;letter-spacing:-.01em;margin-bottom:32px;}
+  .stitle span{color:var(--j);}
+
+  /* CARTE SUIVI */
+  #carte-suivi{height:340px;border-radius:var(--radl);overflow:hidden;border:1px solid var(--bord);background:var(--n2);}
+  .suivi-info{margin-top:16px;padding:16px 20px;background:var(--n2);border:1px solid var(--bord);border-radius:var(--rad);font-size:.9rem;color:var(--t2);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+  .suivi-info strong{color:var(--b);}
+  #suivi-eta{font-family:var(--ft);font-weight:900;color:var(--j);font-size:1.1rem;}
+
+  /* MENU */
+  .cat-bloc{margin-bottom:40px;}
+  .cat-titre{font-family:var(--ft);font-size:1.4rem;font-weight:700;text-transform:uppercase;color:var(--j);letter-spacing:.05em;margin-bottom:16px;}
+  .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
+  .prod-card{position:relative;background:var(--n2);border:1px solid rgba(255,255,255,.1);border-radius:var(--radl);overflow:hidden;display:flex;flex-direction:column;transition:border-color .3s,transform .3s;}
+  .prod-card:hover{border-color:var(--j);transform:translateY(-3px);}
+  .prod-card img{width:100%;height:130px;object-fit:cover;display:block;background:var(--n3);}
+  .prod-card.prod-epuise{opacity:.5;}
+  .prod-card.prod-epuise:hover{border-color:rgba(255,255,255,.1);transform:none;}
+  .prod-card.prod-epuise img{filter:grayscale(1);}
+  .prod-badge-indispo{position:absolute;top:10px;right:10px;background:var(--n);color:var(--t2);font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;border-radius:100px;border:1px solid rgba(255,255,255,.2);z-index:2;}
+  .prod-ajouter[disabled]{border-color:rgba(255,255,255,.2);color:var(--t3);cursor:not-allowed;}
+  .prod-ajouter[disabled]:hover{background:transparent;color:var(--t3);}
+  .prod-body{padding:16px;display:flex;flex-direction:column;gap:8px;flex:1;}
+  .prod-nom{font-weight:700;font-size:.98rem;}
+  .prod-desc{font-size:.8rem;color:var(--t3);line-height:1.5;flex:1;}
+  .prod-stock{font-size:.72rem;color:var(--j);opacity:.85;font-weight:600;}
+  .prod-bas{display:flex;justify-content:space-between;align-items:center;margin-top:4px;}
+  .prod-prix{font-family:var(--ft);font-weight:900;font-size:1.15rem;color:var(--j);}
+  .prod-ajouter{background:transparent;border:1.5px solid var(--j);color:var(--j);border-radius:6px;padding:8px 14px;font-family:var(--fc);font-size:.75rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+  .prod-ajouter:hover{background:var(--j);color:var(--n);}
+
+  /* PANIER */
+  #panier-bouton{position:fixed;bottom:20px;right:20px;z-index:9999;background:var(--j);color:var(--n);border:none;border-radius:100px;padding:14px 22px;font-family:var(--fc);font-size:.95rem;font-weight:800;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.4);display:flex;align-items:center;gap:8px;}
+  #panier-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;opacity:0;pointer-events:none;transition:opacity .3s ease;}
+  #panier-overlay.ouvert{opacity:1;pointer-events:auto;}
+  #panier-drawer{position:fixed;top:0;right:-400px;width:min(400px,92vw);height:100%;background:var(--n2);color:var(--b);box-shadow:-4px 0 24px rgba(0,0,0,.4);z-index:10000;transition:right .3s ease;display:flex;flex-direction:column;font-family:var(--fc);border-left:1px solid var(--bord);}
+  #panier-drawer.ouvert{right:0;}
+  .pd-head{padding:1.2rem;border-bottom:1px solid rgba(255,255,255,.1);display:flex;justify-content:space-between;align-items:center;}
+  .pd-head strong{font-family:var(--ft);text-transform:uppercase;letter-spacing:.05em;font-size:1.1rem;}
+  .pd-fermer{background:none;border:none;color:var(--b);font-size:1.4rem;cursor:pointer;line-height:1;}
+  #panier-items{flex:1;overflow-y:auto;padding:1rem 1.2rem;}
+  .pi-ligne{display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.7rem 0;border-bottom:1px solid rgba(255,255,255,.07);}
+  .pi-nom{font-weight:600;font-size:.9rem;}
+  .pi-sous{font-size:.78rem;color:var(--t3);}
+  .pi-btn{width:26px;height:26px;border:1px solid rgba(255,255,255,.25);border-radius:4px;background:none;color:var(--b);cursor:pointer;}
+  .pi-x{color:var(--r);border:none;background:none;cursor:pointer;font-size:.9rem;}
+  .pd-foot{padding:1.2rem;border-top:1px solid rgba(255,255,255,.1);}
+  .pd-total{display:flex;justify-content:space-between;font-weight:800;margin-bottom:1rem;font-family:var(--ft);font-size:1.2rem;}
+  .pd-foot input{width:100%;padding:.7rem;border:1px solid rgba(255,255,255,.15);border-radius:6px;font-size:.88rem;margin-bottom:.55rem;background:var(--n3);color:var(--b);font-family:var(--fc);}
+  .pd-foot input::placeholder{color:var(--t3);}
+  .pd-valider{width:100%;padding:.95rem;background:var(--j);color:var(--n);border:none;border-radius:8px;font-weight:800;cursor:pointer;font-size:.95rem;text-transform:uppercase;letter-spacing:.05em;}
+  .pd-valider:disabled{opacity:.5;cursor:not-allowed;}
+  #panier-erreur{color:#ff6b6b;font-size:.8rem;margin-top:.5rem;}
+  #panier-confirmation{padding:1.2rem;text-align:center;}
+  #panier-confirmation .ok{color:var(--ok);font-size:2rem;margin-bottom:.5rem;}
+
+  footer{padding:50px 5% 30px;text-align:center;color:var(--t3);font-size:.82rem;border-top:1px solid rgba(255,255,255,.08);}
+  footer a{color:var(--j);text-decoration:none;}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="nlogo">KSM<span>.</span>Camion</a>
+  <div class="nlive"><span class="dot" id="nav-dot"></span><span id="nav-statut">Position en attente</span></div>
+</nav>
+
+<section id="hero">
+  <div class="hbg-img"></div>
+  <div class="hov"></div>
+  <h1 class="htitle">Le camion KSM<br><span class="acc">arrive chez vous</span></h1>
+  <p class="hsub" data-editable-zone="hero_sous_titre">Commandez, suivez le camion en direct sur la carte, on vous livre. Burgers chauds, boissons fraîches. Paiement à la livraison (CB ou espèces).</p>
+  <a href="#menu" class="bty">Voir le menu &amp; commander</a>
+</section>
+
+<section id="suivi">
+  <div class="stag">En direct</div>
+  <h2 class="stitle">Où est le <span>camion</span> ?</h2>
+  <div id="carte-suivi"></div>
+  <div class="suivi-info">
+    <span>Statut : <strong id="suivi-statut-texte">suivi en direct de la position du camion</strong></span>
+    <span id="suivi-eta"></span>
+  </div>
+</section>
+
+<section id="menu">
+  <div class="stag">Le menu</div>
+  <h2 class="stitle">Composez votre <span>commande</span></h2>
+  <div id="menu-conteneur">
+    <div class="cat-bloc"><div class="cat-titre">Burgers</div><div class="prod-grid" data-produits-categorie="Burgers"></div></div>
+    <div class="cat-bloc"><div class="cat-titre">Frites</div><div class="prod-grid" data-produits-categorie="Frites"></div></div>
+    <div class="cat-bloc"><div class="cat-titre">Boissons</div><div class="prod-grid" data-produits-categorie="Boissons"></div></div>
+  </div>
+</section>
+
+<footer>
+  <p data-editable-zone="footer_description">Le camion KSM — burgers faits maison livrés directement chez vous, suivi en temps réel.</p>
+  <p style="margin-top:10px;">Une question ? <a href="tel:0950948815" data-editable-zone="contact_telephone">09 50 94 88 15</a></p>
+  <p style="margin-top:18px;"><a href="/admin.html">Administration</a></p>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  window.LOCWEB_CONFIG = {
+    supabaseUrl: 'https://ibqawtgnucakzdldnitj.supabase.co',
+    supabaseAnonKey: 'sb_publishable_rpLrUo4Cqnfl8zSohDqO0A_Q5Vkj2Hk',
+    // TODO : remplacer par le vrai client_id une fois seed_ksm_camion.sql exécuté
+    clientId: '2f9f2ed4-5058-4945-b298-8ce893dadc19'
+  };
+</script>
+<script src="contenu-loader.js"></script>
+<script src="produits-loader.js"></script>
+<script src="commande.js"></script>
+<script src="suivi.js"></script>
+</body>
+</html>

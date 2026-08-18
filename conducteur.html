@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>KSM Camion — Conducteur</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --j:#F5C518; --j2:#FFD84D; --n:#111111; --n2:#1c1c1c; --n3:#272727; --b:#ffffff;
+    --t2:rgba(255,255,255,.72); --t3:rgba(255,255,255,.48); --ok:#38c172; --r:#e63030;
+    --ft:'Barlow Condensed',sans-serif; --fc:'Barlow',sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--n);color:var(--b);font-family:var(--fc);min-height:100svh;padding:20px 16px 90px;}
+  h1{font-family:var(--ft);font-weight:900;text-transform:uppercase;font-size:1.6rem;margin-bottom:4px;}
+  h1 span{color:var(--j);}
+  .sous{color:var(--t3);font-size:.85rem;margin-bottom:20px;}
+
+  #ecran-token{max-width:340px;margin:60px auto;text-align:center;}
+  #ecran-token input{width:100%;padding:14px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:var(--n2);color:var(--b);font-size:1rem;margin:14px 0;text-align:center;letter-spacing:.1em;}
+  #ecran-token button{width:100%;padding:14px;background:var(--j);color:var(--n);border:none;border-radius:8px;font-weight:800;font-size:1rem;cursor:pointer;text-transform:uppercase;}
+
+  #ecran-app{display:none;}
+
+  .carte-gps{background:var(--n2);border:1px solid rgba(245,197,24,.22);border-radius:14px;padding:18px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;gap:12px;}
+  .gps-statut{display:flex;align-items:center;gap:10px;font-size:.9rem;}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--t3);flex-shrink:0;}
+  .dot.on{background:var(--ok);}
+  .dot.err{background:var(--r);}
+  #btn-tournee{background:var(--j);color:var(--n);border:none;border-radius:8px;padding:12px 18px;font-weight:800;font-size:.85rem;text-transform:uppercase;cursor:pointer;white-space:nowrap;}
+  #btn-tournee.actif{background:var(--r);color:var(--b);}
+
+  .commande-titre{font-family:var(--ft);font-weight:800;text-transform:uppercase;font-size:1.1rem;color:var(--j);margin:24px 0 12px;}
+  .cmd-card{background:var(--n2);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px;margin-bottom:12px;}
+  .cmd-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+  .cmd-nom{font-weight:700;}
+  .cmd-total{font-family:var(--ft);font-weight:900;color:var(--j);font-size:1.15rem;}
+  .cmd-adresse{color:var(--t2);font-size:.88rem;margin-bottom:4px;}
+  .cmd-tel{color:var(--t3);font-size:.82rem;margin-bottom:12px;}
+  .cmd-tel a{color:var(--j);text-decoration:none;}
+  .cmd-statut{display:inline-block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:4px 10px;border-radius:100px;margin-bottom:10px;}
+  .cmd-statut.recue{background:rgba(245,197,24,.15);color:var(--j);}
+  .cmd-statut.en_preparation{background:rgba(255,216,77,.15);color:var(--j2);}
+  .cmd-statut.en_livraison{background:rgba(56,193,114,.15);color:var(--ok);}
+  .cmd-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .cmd-btn{flex:1;min-width:110px;padding:11px;border-radius:8px;border:1.5px solid var(--j);background:transparent;color:var(--j);font-weight:700;font-size:.8rem;text-transform:uppercase;cursor:pointer;}
+  .cmd-btn:hover{background:var(--j);color:var(--n);}
+  .cmd-btn.annuler{border-color:var(--r);color:var(--r);}
+  .cmd-btn.annuler:hover{background:var(--r);color:var(--b);}
+  #vide{color:var(--t3);font-size:.9rem;text-align:center;padding:30px 0;}
+</style>
+</head>
+<body>
+
+<div id="ecran-token">
+  <h1>KSM <span>Camion</span></h1>
+  <p class="sous">Espace conducteur</p>
+  <input type="password" id="token-input" placeholder="Code d'accès" inputmode="text">
+  <button id="token-valider">Entrer</button>
+  <p id="token-erreur" style="color:var(--r);font-size:.8rem;margin-top:10px;"></p>
+</div>
+
+<div id="ecran-app">
+  <h1>KSM <span>Camion</span></h1>
+  <p class="sous">Espace conducteur</p>
+
+  <div class="carte-gps">
+    <div class="gps-statut"><span class="dot" id="gps-dot"></span><span id="gps-texte">Position non partagée</span></div>
+    <button id="btn-tournee">Démarrer la tournée</button>
+  </div>
+
+  <div class="commande-titre">Commandes en cours</div>
+  <div id="liste-commandes"><p id="vide">Aucune commande pour le moment.</p></div>
+</div>
+
+<script>
+  window.LOCWEB_CONFIG = {
+    supabaseUrl: 'https://ibqawtgnucakzdldnitj.supabase.co',
+    supabaseAnonKey: 'sb_publishable_rpLrUo4Cqnfl8zSohDqO0A_Q5Vkj2Hk',
+    // TODO : remplacer par le vrai client_id une fois seed_ksm_camion.sql exécuté
+    clientId: '2f9f2ed4-5058-4945-b298-8ce893dadc19'
+  };
+</script>
+<script src="conducteur.js"></script>
+</body>
+</html>
