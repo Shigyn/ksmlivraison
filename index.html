@@ -99,10 +99,14 @@
   .suivi-info strong{color:var(--b);font-weight:600;}
   #suivi-eta{font-family:var(--ft);font-weight:900;color:var(--j);font-size:1.15rem;}
 
-  /* MENU */
-  .cat-bloc{margin-bottom:44px;}
-  .cat-titre{font-family:var(--ft);font-size:1.35rem;font-weight:700;text-transform:uppercase;color:var(--j);letter-spacing:.05em;margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.08);}
-  .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;}
+  /* MENU — encadré façon écran d'app mobile */
+  .app-frame{position:relative;max-width:600px;margin:0 auto;background:var(--n2);border:1px solid rgba(255,255,255,.09);border-radius:30px;padding:36px 22px 28px;box-shadow:0 40px 90px -36px rgba(0,0,0,.75),0 0 0 1px rgba(245,197,24,.05);}
+  .app-handle{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:42px;height:5px;border-radius:100px;background:rgba(255,255,255,.16);}
+  .app-frame .cat-bloc:last-child{margin-bottom:0;}
+  .cat-bloc{margin-bottom:36px;}
+  .cat-titre{font-family:var(--ft);font-size:1.25rem;font-weight:700;text-transform:uppercase;color:var(--j);letter-spacing:.05em;margin-bottom:16px;padding-bottom:9px;border-bottom:1px solid rgba(255,255,255,.08);}
+  .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+  .app-frame .prod-card{background:var(--n3);}
   .prod-card{position:relative;background:var(--n2);border:1px solid rgba(255,255,255,.08);border-radius:var(--radl);overflow:hidden;display:flex;flex-direction:column;transition:border-color .3s cubic-bezier(.16,1,.3,1),transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s;}
   .prod-card:hover{border-color:rgba(245,197,24,.5);transform:translateY(-4px);box-shadow:0 20px 40px -20px rgba(0,0,0,.7);}
   .prod-card .prod-img-wrap{aspect-ratio:16/11;overflow:hidden;background:var(--n3);}
@@ -198,10 +202,13 @@
 <section id="menu">
   <div class="stag rv">Le menu</div>
   <h2 class="stitle stitle-mega rv">Commande <span>ici</span></h2>
-  <div id="menu-conteneur">
-    <div class="cat-bloc rv"><div class="cat-titre">Burgers</div><div class="prod-grid" data-produits-categorie="Burgers"></div></div>
-    <div class="cat-bloc rv"><div class="cat-titre">Frites</div><div class="prod-grid" data-produits-categorie="Frites"></div></div>
-    <div class="cat-bloc rv"><div class="cat-titre">Boissons</div><div class="prod-grid" data-produits-categorie="Boissons"></div></div>
+  <div class="app-frame rv">
+    <span class="app-handle"></span>
+    <div id="menu-conteneur">
+      <div class="cat-bloc"><div class="cat-titre">Burgers</div><div class="prod-grid" data-produits-categorie="Burgers"></div></div>
+      <div class="cat-bloc"><div class="cat-titre">Frites</div><div class="prod-grid" data-produits-categorie="Frites"></div></div>
+      <div class="cat-bloc"><div class="cat-titre">Boissons</div><div class="prod-grid" data-produits-categorie="Boissons"></div></div>
+    </div>
   </div>
 </section>
 
