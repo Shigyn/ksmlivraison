@@ -50,6 +50,21 @@
   .cmd-btn.annuler{border-color:var(--r);color:var(--r);}
   .cmd-btn.annuler:hover{background:var(--r);color:var(--b);}
   #vide{color:var(--t3);font-size:.9rem;text-align:center;padding:30px 0;}
+
+  /* ONGLETS */
+  .onglets{display:flex;gap:8px;margin-bottom:20px;background:var(--n2);border-radius:10px;padding:4px;}
+  .onglet-btn{flex:1;padding:11px;border:none;background:transparent;color:var(--t2);font-family:var(--fc);font-weight:700;font-size:.82rem;text-transform:uppercase;border-radius:7px;cursor:pointer;}
+  .onglet-btn.actif{background:var(--j);color:var(--n);}
+  .onglet-panneau{display:none;}
+  .onglet-panneau.actif{display:block;}
+
+  /* PRODUITS — juste le nom et le stock, rien d'autre (édition complète = locweb-editeur) */
+  .cat-groupe-titre{font-family:var(--ft);font-weight:800;text-transform:uppercase;font-size:.95rem;color:var(--t3);letter-spacing:.08em;margin:18px 0 8px;}
+  .p-ligne{background:var(--n2);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:14px;}
+  .p-nom{font-weight:600;font-size:.95rem;flex:1;}
+  .p-stock-zone{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+  .p-stock-btn{width:34px;height:34px;border-radius:8px;border:1px solid rgba(245,197,24,.35);background:var(--n3);color:var(--j);font-family:var(--ft);font-weight:900;font-size:1.1rem;cursor:pointer;}
+  .p-stock-input{width:56px;height:34px;text-align:center;background:var(--n3);border:1px solid rgba(245,197,24,.4);border-radius:8px;color:var(--j);font-family:var(--ft);font-weight:800;font-size:1.05rem;}
 </style>
 </head>
 <body>
@@ -66,13 +81,25 @@
   <h1>KSM <span>Camion</span></h1>
   <p class="sous">Espace conducteur</p>
 
-  <div class="carte-gps">
-    <div class="gps-statut"><span class="dot" id="gps-dot"></span><span id="gps-texte">Position non partagée</span></div>
-    <button id="btn-tournee">Démarrer la tournée</button>
+  <div class="onglets">
+    <button class="onglet-btn actif" data-onglet="tournee">Tournée</button>
+    <button class="onglet-btn" data-onglet="produits">Produits &amp; Stock</button>
   </div>
 
-  <div class="commande-titre">Commandes en cours</div>
-  <div id="liste-commandes"><p id="vide">Aucune commande pour le moment.</p></div>
+  <div class="onglet-panneau actif" id="panneau-tournee">
+    <div class="carte-gps">
+      <div class="gps-statut"><span class="dot" id="gps-dot"></span><span id="gps-texte">Position non partagée</span></div>
+      <button id="btn-tournee">Démarrer la tournée</button>
+    </div>
+
+    <div class="commande-titre">Commandes en cours</div>
+    <div id="liste-commandes"><p id="vide">Aucune commande pour le moment.</p></div>
+  </div>
+
+  <div class="onglet-panneau" id="panneau-produits">
+    <div class="commande-titre">Stock</div>
+    <div id="liste-produits"><p id="produits-vide">Chargement…</p></div>
+  </div>
 </div>
 
 <script>

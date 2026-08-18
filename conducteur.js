@@ -30,6 +30,7 @@
     document.getElementById('ecran-token').style.display = 'none';
     document.getElementById('ecran-app').style.display = 'block';
     rafraichirCommandes();
+    chargerProduits();
     setInterval(rafraichirCommandes, 10000);
   }
 
@@ -143,10 +144,89 @@
     return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
+  // Onglets
+  function initOnglets() {
+    document.querySelectorAll('.onglet-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.onglet-btn').forEach((b) => b.classList.remove('actif'));
+        document.querySelectorAll('.onglet-panneau').forEach((p) => p.classList.remove('actif'));
+        btn.classList.add('actif');
+        document.getElementById(`panneau-${btn.dataset.onglet}`).classList.add('actif');
+      });
+    });
+  }
+
+  // Stock — juste le nom et la quantité, rien d'autre (édition complète du
+  // catalogue : prix/photo/description/catégorie restent dans locweb-editeur)
+  async function chargerProduits() {
+    try {
+      const { produits } = await appel('lister_produits');
+      const conteneur = document.getElementById('liste-produits');
+
+      if (!produits || produits.length === 0) {
+        conteneur.innerHTML = '<p id="produits-vide">Aucun produit.</p>';
+        return;
+      }
+
+      const parCategorie = {};
+      produits.forEach((p) => (parCategorie[p.categorie || 'Sans catégorie'] ??= []).push(p));
+
+      conteneur.innerHTML = Object.entries(parCategorie).map(([cat, items]) => `
+        <div class="cat-groupe-titre">${escapeHtml(cat)}</div>
+        ${items.map((p) => ligneStock(p)).join('')}
+      `).join('');
+
+      cablerLignesStock();
+    } catch (err) {
+      console.warn('Produits indisponibles.', err);
+    }
+  }
+
+  function ligneStock(p) {
+    return `
+      <div class="p-ligne" data-produit="${p.id}">
+        <span class="p-nom">${escapeHtml(p.nom ?? '')}</span>
+        <div class="p-stock-zone">
+          <button class="p-stock-btn" data-moins="${p.id}">−</button>
+          <input type="number" class="p-stock-input" value="${p.stock ?? 0}" data-id="${p.id}">
+          <button class="p-stock-btn" data-plus="${p.id}">+</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function cablerLignesStock() {
+    document.querySelectorAll('#liste-produits .p-stock-input').forEach((input) => {
+      input.addEventListener('change', () => sauverStock(input.dataset.id, Number(input.value) || 0));
+    });
+    document.querySelectorAll('#liste-produits [data-moins]').forEach((btn) => {
+      btn.addEventListener('click', () => ajusterStock(btn.dataset.moins, -1));
+    });
+    document.querySelectorAll('#liste-produits [data-plus]').forEach((btn) => {
+      btn.addEventListener('click', () => ajusterStock(btn.dataset.plus, 1));
+    });
+  }
+
+  function ajusterStock(id, delta) {
+    const input = document.querySelector(`.p-stock-input[data-id="${id}"]`);
+    const valeur = Math.max(0, (Number(input.value) || 0) + delta);
+    input.value = valeur;
+    sauverStock(id, valeur);
+  }
+
+  async function sauverStock(id, valeur) {
+    try {
+      await appel('maj_produit', { produit_id: id, champs: { stock: valeur } });
+    } catch (err) {
+      alert('Erreur enregistrement : ' + err.message);
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('token-valider').addEventListener('click', validerToken);
     document.getElementById('token-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') validerToken(); });
     document.getElementById('btn-tournee').addEventListener('click', basculerTournee);
+    initOnglets();
 
     if (token) {
       appel('lister_commandes').then(afficherApp).catch(() => { localStorage.removeItem(STORAGE_TOKEN); token = ''; });
